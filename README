@@ -1,0 +1,155 @@
+# LaTeX Compilation Server and Client
+
+This project consists of a Python-based server that receives LaTeX fragments, compiles them into a standalone document, converts the result into an SVG file, and returns it. Additionally, it includes a command-line utility to interact with the server.
+
+## Requirements
+
+- Python 3.x
+- Flask
+- requests
+- A complete TeX Live distribution
+- pdf2svg utility
+
+## Installation
+
+First, ensure you have the necessary Python packages installed:
+
+```sh
+pip install Flask requests
+```
+
+You should also have a complete TeX Live installation and the `pdf2svg` utility on your Linux server:
+
+```sh
+sudo apt-get install texlive-full pdf2svg
+```
+
+## Server
+
+### Description
+
+The LaTeX server (`latex_server.py`) accepts HTTP POST requests containing LaTeX fragments and optional preamble. It compiles the LaTeX code into a PDF and converts the PDF to SVG, which is then returned to the client.
+
+### Usage
+
+To start the server, run:
+
+```sh
+python latex_server.py
+```
+
+### API Endpoint
+
+- **Endpoint**: `/compile`
+- **Method**: POST
+- **Payload**: JSON
+  - `fragment` (string, required): The LaTeX fragment to compile.
+  - `preamble` (string, optional): Additional preamble, including `\usepackage` statements or macros.
+- **Response**: The compiled SVG image or an error message.
+
+### Example JSON Payload
+
+```json
+{
+  "fragment": "$x^2 + y^2 = 1$",
+  "preamble": "\\usepackage{amsmath}"
+}
+```
+
+## Client
+
+### Description
+
+The client (`latex_client.py`) is a command-line utility that reads LaTeX content from specified files, sends it to the LaTeX server for compilation, and saves the resulting SVG file.
+
+### Usage
+
+Command syntax:
+
+```sh
+python latex_client.py fragment_file [options]
+```
+
+- `fragment_file`: Path to the file containing the LaTeX fragment.
+- Options:
+  - `-p`, `--preamble_file`: Path to the file containing additional LaTeX preamble (optional).
+  - `-o`, `--output`: Output SVG file name (default: `output.svg`).
+  - `--url`: URL of the LaTeX compilation server (default: `http://localhost:5000/compile`).
+
+### Example Usage
+
+To compile a LaTeX fragment with an optional preamble:
+
+```sh
+python latex_client.py fragment.tex -p preamble.tex -o output.svg
+```
+
+To compile a LaTeX fragment without preamble:
+
+```sh
+python latex_client.py fragment.tex -o output.svg
+```
+
+### Sample Files
+
+#### fragment.tex
+
+```latex
+x^2 + y^2 = 1
+```
+
+#### preamble.tex
+
+```latex
+\usepackage{amsmath}
+```
+
+## Code Explanation
+
+### Server (`latex_server.py`)
+
+This script creates a Flask server with a single endpoint `/compile` that accepts POST requests and processes LaTeX content.
+
+1. **Flask Application**:
+
+   - The Flask app is set up with one route `/compile` that handles POST requests.
+
+2. **Temporary Directory**:
+
+   - The LaTeX input is written to a temporary `.tex` file.
+
+3. **Subprocess Calls**:
+
+   - `pdflatex` compiles the `.tex` file into a `.pdf`.
+   - `pdf2svg` converts the PDF to SVG.
+
+4. **Error Handling**:
+   - If any subprocess call fails, the server returns the error details.
+
+### Client (`latex_client.py`)
+
+This script is a command-line tool that reads LaTeX content from files, sends it to the server, and saves the resulting SVG.
+
+1. **Argument Parsing**:
+
+   - Command-line arguments for the LaTeX fragment file, optional preamble file, output file, and server URL are defined using `argparse`.
+
+2. **File Reading**:
+
+   - The LaTeX fragment and optional preamble are read from the specified files.
+
+3. **HTTP Request**:
+
+   - The JSON payload with the LaTeX content is sent to the server using a POST request from the `requests` library.
+
+4. **Handling the Response**:
+   - The server’s response (SVG data) is saved to the specified output file.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+```
+
+This `README.md` file provides comprehensive instructions on setting up and using the LaTeX server and the command-line client. It also explains the code structure and functionality for each component in detail.
+```
